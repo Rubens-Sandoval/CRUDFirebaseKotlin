@@ -48,6 +48,7 @@ import com.google.firebase.firestore.firestore
 class MainActivity : ComponentActivity() {
     val db = Firebase.firestore
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
 fun MyAppContent(db: FirebaseFirestore) {
     val (email, setEmail) = remember { mutableStateOf("") }
@@ -183,38 +185,65 @@ fun listUsers(db: FirebaseFirestore){
             Text(text = "Password:")
         }
     }
+
     Row (
         Modifier
             .fillMaxWidth()
+            .padding(start = 24.dp)
     ){
-        Column (
-            Modifier
-                .fillMaxWidth(0.3f)
-        ){
-            val users = mutableStateListOf<HashMap<String, String>>()
-            db.collection("users")
-                .get()
-                .addOnSuccessListener { documents ->
-                    for (document in documents){
-                        val list = hashMapOf(
-                            "email" to "${document.data.get("email")}",
-                            "password" to "${document.data.get("password")}"
-                        )
-                        users.add(list)
-                    }
+        val users = mutableStateListOf<HashMap<String, String>>()
+        db.collection("users")
+            .get()
+            .addOnSuccessListener { documents ->
+                for (document in documents){
+                    val list = hashMapOf(
+                        "email" to "${document.data.get("email")}",
+                        "password" to "${document.data.get("password")}"
+                    )
+                    users.add(list)
                 }
-            LazyColumn (modifier = Modifier.fillMaxWidth()){
-                items(users) { user ->
-                    Row(modifier = Modifier.fillMaxWidth()){
-                        Column(modifier = Modifier.weight(.5f)) {
-                            Text(text = user["email"] ?: "--")
-                        }
-                        Column(modifier = Modifier.weight(.5f)) {
-                            Text(text = user["password"] ?: "--")
-                        }
+            }
+        LazyColumn (state = users, modifier = Modifier.fillMaxWidth()){
+            items(users) { user ->
+                Row(modifier = Modifier.fillMaxWidth()){
+                    Column(modifier = Modifier.fillMaxWidth(0.5f)) {
+                        Text(text = user["email"] ?: "--")
+                    }
+                    Column(modifier = Modifier.fillMaxWidth(0.5f)) {
+                        Text(text = user["password"] ?: "--")
                     }
                 }
             }
         }
+
+//        Column (
+//            Modifier
+//                .fillMaxWidth(0.3f)
+//        ){
+//            val users = mutableStateListOf<HashMap<String, String>>()
+//            db.collection("users")
+//                .get()
+//                .addOnSuccessListener { documents ->
+//                    for (document in documents){
+//                        val list = hashMapOf(
+//                            "email" to "${document.data.get("email")}",
+//                            "password" to "${document.data.get("password")}"
+//                        )
+//                        users.add(list)
+//                    }
+//                }
+//            LazyColumn (modifier = Modifier.fillMaxWidth()){
+//                items(users) { user ->
+//                    Row(modifier = Modifier.fillMaxWidth()){
+//                        Column(modifier = Modifier.fillMaxWidth(0.5f)) {
+//                            Text(text = user["email"] ?: "--")
+//                        }
+//                        Column(modifier = Modifier.fillMaxWidth(0.5f)) {
+//                            Text(text = user["password"] ?: "--")
+//                        }
+//                    }
+//                }
+//            }
+        }
     }
-}
+

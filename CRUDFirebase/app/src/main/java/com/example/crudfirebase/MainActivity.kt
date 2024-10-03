@@ -1,5 +1,6 @@
 package com.example.crudfirebase
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,11 +10,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -21,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -87,10 +92,10 @@ fun MyAppContent(db: FirebaseFirestore) {
                     .padding(35.dp, 25.dp)
                     .fillMaxWidth()
                     .defaultMinSize(minHeight = 60.dp)
-                    .shadow(10.dp, shape = RoundedCornerShape(10.dp), spotColor = Color.Green),
+                    .shadow(10.dp, shape = RoundedCornerShape(10.dp), spotColor = Color.Black),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Green,
-                    disabledContentColor = Color.Blue,
+                    containerColor = Color.Gray,
+                    disabledContentColor = Color.Black,
                 ),
                 shape = RoundedCornerShape(10.dp),
                 onClick = {
@@ -115,6 +120,7 @@ fun MyAppContent(db: FirebaseFirestore) {
                     fontSize = 20.sp
                 ))
             }
+            listUsers(db)
         }
     }
 }
@@ -142,16 +148,73 @@ fun Input(label: String, value: String, onValueChange: (String) -> Unit) {
                 isFocused.value = focusState.isFocused
             }
             .border(
-                border = if (isFocused.value) BorderStroke(2.dp, Color.Blue) else BorderStroke(0.dp, Color.Transparent),
+                border = if (isFocused.value) BorderStroke(2.dp, Color.LightGray) else BorderStroke(0.dp, Color.Transparent),
                 shape = RoundedCornerShape(10.dp),
             )
             .fillMaxWidth()
             .defaultMinSize(minHeight = 64.dp),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Blue,
-            unfocusedContainerColor = Color.Blue,
+            focusedContainerColor = Color.LightGray,
+            unfocusedContainerColor = Color.LightGray,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
         )
     )
+}
+
+@SuppressLint("UnrememberedMutableState")
+@Composable
+fun listUsers(db: FirebaseFirestore){
+    Row (
+        Modifier
+            .fillMaxWidth()
+            .padding(20.dp)
+    ){
+        Column(
+            Modifier
+                .fillMaxWidth(0.5f)
+        ) {
+            Text(text = "Email:")
+        }
+        Column(
+            Modifier
+                .fillMaxWidth(0.5f)
+        ) {
+            Text(text = "Password:")
+        }
+    }
+    Row (
+        Modifier
+            .fillMaxWidth()
+    ){
+        Column (
+            Modifier
+                .fillMaxWidth(0.3f)
+        ){
+            val users = mutableStateListOf<HashMap<String, String>>()
+            db.collection("users")
+                .get()
+                .addOnSuccessListener { documents ->
+                    for (document in documents){
+                        val list = hashMapOf(
+                            "email" to "${document.data.get("email")}",
+                            "password" to "${document.data.get("password")}"
+                        )
+                        users.add(list)
+                    }
+                }
+            LazyColumn (modifier = Modifier.fillMaxWidth()){
+                items(users) { user ->
+                    Row(modifier = Modifier.fillMaxWidth()){
+                        Column(modifier = Modifier.weight(.5f)) {
+                            Text(text = user["email"] ?: "--")
+                        }
+                        Column(modifier = Modifier.weight(.5f)) {
+                            Text(text = user["password"] ?: "--")
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

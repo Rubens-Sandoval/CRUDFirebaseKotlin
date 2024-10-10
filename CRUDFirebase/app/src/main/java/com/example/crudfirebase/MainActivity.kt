@@ -110,6 +110,7 @@ fun MyAppContent(db: FirebaseFirestore) {
                         .add(user)
                         .addOnSuccessListener {
                             // Success
+
                         }
                         .addOnFailureListener {
                             // Error
@@ -174,15 +175,21 @@ fun listUsers(db: FirebaseFirestore){
     ){
         Column(
             Modifier
-                .fillMaxWidth(0.5f)
+                .fillMaxWidth(0.4f)
         ) {
             Text(text = "Email:")
         }
         Column(
             Modifier
-                .fillMaxWidth(0.5f)
+                .fillMaxWidth(0.4f)
         ) {
             Text(text = "Password:")
+        }
+        Column(
+            Modifier
+                .fillMaxWidth(0.4f)
+        ) {
+            Text(text = "Delete:")
         }
     }
 
@@ -191,26 +198,52 @@ fun listUsers(db: FirebaseFirestore){
             .fillMaxWidth()
             .padding(start = 24.dp)
     ){
-        val users = mutableStateListOf<HashMap<String, String>>()
+        val users = mutableStateListOf<Pair<String, HashMap<String, String>>>()
         db.collection("users")
             .get()
             .addOnSuccessListener { documents ->
+                users.clear()
                 for (document in documents){
                     val list = hashMapOf(
                         "email" to "${document.data.get("email")}",
                         "password" to "${document.data.get("password")}"
                     )
-                    users.add(list)
+                    users.add(Pair(document.id, list))
                 }
             }
-        LazyColumn (state = users, modifier = Modifier.fillMaxWidth()){
-            items(users) { user ->
+        LazyColumn (modifier = Modifier.fillMaxWidth()){
+            items(users) { userC ->
+                val (docId, user) = userC
                 Row(modifier = Modifier.fillMaxWidth()){
-                    Column(modifier = Modifier.fillMaxWidth(0.5f)) {
+                    Column(modifier = Modifier.fillMaxWidth(0.3f)) {
                         Text(text = user["email"] ?: "--")
                     }
-                    Column(modifier = Modifier.fillMaxWidth(0.5f)) {
+                    Column(modifier = Modifier.fillMaxWidth(0.3f)) {
                         Text(text = user["password"] ?: "--")
+                    }
+                    Column(modifier = Modifier.fillMaxWidth(0.3f)) {
+                        Button (
+
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Gray,
+                                disabledContentColor = Color.Black,
+                            ),
+                            shape = RoundedCornerShape(10.dp),
+                            onClick = {
+                                users.clear()
+                                db.collection("users").document(docId)
+                                    .delete()
+                                    .addOnSuccessListener {
+                                        // Success
+
+                                    }
+                                    .addOnFailureListener {
+                                        // Error
+                                    }
+                            }
+                        ) {
+                            Text("Excluir")
+                        }
                     }
                 }
             }
@@ -246,4 +279,5 @@ fun listUsers(db: FirebaseFirestore){
 //            }
         }
     }
+
 
